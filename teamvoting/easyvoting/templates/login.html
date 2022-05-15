@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+      .form-horizontal {
+          text-align: center;
+          margin-top: 200px;
+      }
+  </style>
+</head>
+<body>
+<form class="form-horizontal" action="/login/" method="POST">
+  {% csrf_token %}
+  <legend>Your Name:</legend>
+  <div class="mb-3">
+    <input type="text" class="form-control" id="user" name="user" placeholder="apple">
+    <div id="nameHelp" class="form-text">Please enter your name above.</div>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+</body>
+</html>
