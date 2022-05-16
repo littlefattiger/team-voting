@@ -7,40 +7,132 @@
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <style>
       .message {
-          height: 500px;
+          height: 400px;
+          border: 1px solid #dddddd;
+          width: 100%;
+      }
+
+      .user {
+          height: 140px;
+          border: 1px solid #dddddd;
+          width: 100%;
+      }
+            .votestatus {
+          height: 140px;
           border: 1px solid #dddddd;
           width: 100%;
       }
   </style>
 </head>
 <body>
-<div class="message" id="message">
-  <input type="text" placeholder="please enter" id="txt">
-  <input type="button" value="Vote">
-  <input type="button" value="Disconnect">
+<h1>Team Voting System(Beta)</h1>
+<div id="control">
+  <input type="button" value="Next Round" onclick="nextRound()">
+  <input type="button" value="Disconnect" onclick="closeConn()">
 </div>
-<form>
+<h2>Voting Result:</h2>
+<div class="message" id="message">
+</div>
+<h2>Voting Stauts:</h2>
+<div class="votestatus" id="votestatus">
+  </div>
+<h2>Teammate Info:</h2>
+<div class="user" id="user">
+</div>
 <div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
+  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="1">
   <label class="form-check-label" for="inlineRadio1">1 point</label>
 </div>
 <div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
+  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="2">
   <label class="form-check-label" for="inlineRadio2">2 points</label>
 </div>
 <div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="option3">
+  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="3">
   <label class="form-check-label" for="inlineRadio3">3 points</label>
 </div>
-  <div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio4" value="option4">
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio4" value="5">
   <label class="form-check-label" for="inlineRadio4">5 points</label>
 </div>
-    <div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio5" value="option5">
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio5" value="8">
   <label class="form-check-label" for="inlineRadio5">8 points</label>
 </div>
-   <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+<input type="button" class="btn btn-primary" value="Vote" onclick="vote()">
+
+
+<script>
+    var socket = new WebSocket("ws://127.0.0.1:8000/room/{{ group }}/")
+    socket.onopen = function (event) {
+        let info = {user: "{{ user }}", type: "joinInfo"}
+        socket.send(JSON.stringify(info))
+    }
+    socket.onmessage = function (event) {
+
+        let dataDict = JSON.parse(event.data);
+        let user = dataDict.user
+        if (dataDict.msg_type === 1) {
+            let tag = document.createElement("div");
+            document.getElementById("user").innerHTML = '';
+            tag.innerText = user + " joined\n Current users:";
+            document.getElementById("user").appendChild(tag);
+            for (const [key, value] of Object.entries(dataDict.alluser)) {
+                let tag_temp = document.createElement("div");
+                tag_temp.innerText = `${key}`;
+                document.getElementById("user").appendChild(tag_temp);
+            }
+        } else if (dataDict.msg_type === 2) {
+            let tag = document.createElement("div");
+            document.getElementById("user").innerHTML = '';
+            tag.innerText = user + " left\n current users:";
+            document.getElementById("user").appendChild(tag);
+            for (const [key, value] of Object.entries(dataDict.alluser)) {
+                let tag_temp = document.createElement("div");
+                tag_temp.innerText = `${key}`;
+                document.getElementById("user").appendChild(tag_temp);
+            }
+        } else if (dataDict.msg_type === 3) {
+            let tag = document.createElement("div");
+            tag.innerText = user + " vote:" + dataDict.voting + "point(s)";
+            document.getElementById("message").appendChild(tag);
+        } else if (dataDict.msg_type === 4) {
+            document.getElementById("message").innerHTML = '';
+        }
+
+
+    }
+    socket.onclose = function (event) {
+        let info = {user: "{{ user }}", type: "quitInfo"}
+        print(event)
+        {#socket.send(JSON.stringify(info))#}
+    }
+
+    function vote() {
+        for (let i = 1; i <= 5; i++) {
+            let currentButton = document.getElementById("inlineRadio" + i)
+            if (currentButton.checked) {
+                let info = {user: "{{ user }}", type: "voteInfo", voting: currentButton.value}
+                socket.send(JSON.stringify(info))
+                break;
+            }
+        }
+
+    }
+
+
+    function nextRound() {
+        let info = {user: "{{ user }}", type: "resetInfo"}
+        socket.send(JSON.stringify(info))
+    }
+
+    function closeConn() {
+        let info = {user: "{{ user }}", type: "quitInfo"}
+        console.log({{ user }} + " is quitting")
+        socket.send(JSON.stringify(info))
+        socket.close()
+    }
+</script>
+
 </body>
 </html>
