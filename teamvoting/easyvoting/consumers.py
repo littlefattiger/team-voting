@@ -1,11 +1,13 @@
+import collections
+
 from channels.generic.websocket import WebsocketConsumer
 from channels.exceptions import StopConsumer
 from asgiref.sync import async_to_sync
 import json
 
 CURRENT_USER = {}
-USER_CHANNEL_MAPPING={}
-USER_VOTING = {}
+USER_CHANNEL_MAPPING = {}
+USER_VOTED = {}
 
 
 class VotingConsumer(WebsocketConsumer):
@@ -33,34 +35,63 @@ class VotingConsumer(WebsocketConsumer):
         if content_type == "quitInfo":
             if user in CURRENT_USER:
                 del CURRENT_USER[user]
+            del USER_CHANNEL_MAPPING[self.channel_name]
             info = {
                 'msg_type': 2,
                 "user": user,
                 "alluser": CURRENT_USER,
             }
             async_to_sync(self.channel_layer.group_send)(group, {"type": "sync.info", 'message': info})
+            self.close()
+            raise StopConsumer
+            return
         elif content_type == "voteInfo":
-            info = {
-                'msg_type': 3,
-                "user": user,
-                "voting": text_dict["voting"]
-            }
-            async_to_sync(self.channel_layer.group_send)(group, {"type": "sync.info", 'message': info})
+            USER_VOTED[user] = text_dict["voting"]
+            if len(USER_VOTED) == len(CURRENT_USER):
+                summary_temp = collections.defaultdict(list)
+                for k, v in USER_VOTED.items():
+                    summary_temp[v].append(k)
+
+                summary_sort = sorted(summary_temp, key=lambda k: len(summary_temp[k]), reverse=True)
+                summaryinfo = {}
+                for k in summary_sort:
+                    summaryinfo[k] = summary_temp[k]
+                info = {
+                    'msg_type': 5,
+                    "user": user,
+                    "voted": USER_VOTED,
+                    "summaryinfo": summaryinfo,
+                }
+                async_to_sync(self.channel_layer.group_send)(group, {"type": "sync.info", 'message': info})
+            else:
+                info = {
+                    'msg_type': 3,
+                    "user": user,
+                    "voted": USER_VOTED
+                }
+                async_to_sync(self.channel_layer.group_send)(group, {"type": "sync.info", 'message': info})
         elif content_type == "resetInfo":
             info = {
                 'msg_type': 4,
                 "user": user,
             }
+            USER_VOTED.clear()
             async_to_sync(self.channel_layer.group_send)(group, {"type": "sync.info", 'message': info})
 
     def sync_info(self, event):
         self.send(json.dumps(event['message']))
 
     def websocket_disconnect(self, message):
-        group = self.scope['url_route']['kwargs'].get("group")
-        async_to_sync(self.channel_layer.group_discard)(group, self.channel_name)
         user = USER_CHANNEL_MAPPING[self.channel_name]
+        group = self.scope['url_route']['kwargs'].get("group")
         if user in CURRENT_USER:
             del CURRENT_USER[user]
-        print("someone quit")
+        del USER_CHANNEL_MAPPING[self.channel_name]
+        info = {
+            'msg_type': 2,
+            "user": user,
+            "alluser": CURRENT_USER,
+        }
+        async_to_sync(self.channel_layer.group_send)(group, {"type": "sync.info", 'message': info})
+        async_to_sync(self.channel_layer.group_discard)(group, self.channel_name)
         raise StopConsumer

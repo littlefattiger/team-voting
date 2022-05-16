@@ -7,7 +7,7 @@
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <style>
       .message {
-          height: 400px;
+          height: 300px;
           border: 1px solid #dddddd;
           width: 100%;
       }
@@ -17,7 +17,8 @@
           border: 1px solid #dddddd;
           width: 100%;
       }
-            .votestatus {
+
+      .votestatus {
           height: 140px;
           border: 1px solid #dddddd;
           width: 100%;
@@ -35,7 +36,7 @@
 </div>
 <h2>Voting Stauts:</h2>
 <div class="votestatus" id="votestatus">
-  </div>
+</div>
 <h2>Teammate Info:</h2>
 <div class="user" id="user">
 </div>
@@ -75,7 +76,7 @@
         if (dataDict.msg_type === 1) {
             let tag = document.createElement("div");
             document.getElementById("user").innerHTML = '';
-            tag.innerText = user + " joined\n Current users:";
+            tag.innerText = "Current users:";
             document.getElementById("user").appendChild(tag);
             for (const [key, value] of Object.entries(dataDict.alluser)) {
                 let tag_temp = document.createElement("div");
@@ -85,7 +86,7 @@
         } else if (dataDict.msg_type === 2) {
             let tag = document.createElement("div");
             document.getElementById("user").innerHTML = '';
-            tag.innerText = user + " left\n current users:";
+            tag.innerText = "Current users:";
             document.getElementById("user").appendChild(tag);
             for (const [key, value] of Object.entries(dataDict.alluser)) {
                 let tag_temp = document.createElement("div");
@@ -94,16 +95,33 @@
             }
         } else if (dataDict.msg_type === 3) {
             let tag = document.createElement("div");
-            tag.innerText = user + " vote:" + dataDict.voting + "point(s)";
-            document.getElementById("message").appendChild(tag);
+            document.getElementById("votestatus").innerHTML = '';
+            tag.innerText = "Voted Users:";
+            for (const [key, value] of Object.entries(dataDict.voted)) {
+                let tag_temp = document.createElement("div");
+                tag_temp.innerText = `${key} has voted`;
+                document.getElementById("votestatus").appendChild(tag_temp);
+            }
+
         } else if (dataDict.msg_type === 4) {
             document.getElementById("message").innerHTML = '';
+            document.getElementById("votestatus").innerHTML = '';
+        } else if (dataDict.msg_type === 5) {
+            let tag = document.createElement("div");
+            document.getElementById("message").innerHTML = '';
+            tag.innerText = "Voting Result:";
+            for (const [key, value] of Object.entries(dataDict.summaryinfo)) {
+                let tag_temp = document.createElement("div");
+                tag_temp.innerText = `${key}` + ":" + `${value}`;
+                document.getElementById("message").appendChild(tag_temp);
+            }
         }
 
 
     }
+
     socket.onclose = function (event) {
-        let info = {user: "{{ user }}", type: "quitInfo"}
+        {#let info = {user: "{{ user }}", type: "quitInfo"}#}
         print(event)
         {#socket.send(JSON.stringify(info))#}
     }
@@ -128,9 +146,9 @@
 
     function closeConn() {
         let info = {user: "{{ user }}", type: "quitInfo"}
-        console.log({{ user }} + " is quitting")
+        console.log("{{ user }}   is quitting")
         socket.send(JSON.stringify(info))
-        socket.close()
+        {#socket.close()#}
     }
 </script>
 
