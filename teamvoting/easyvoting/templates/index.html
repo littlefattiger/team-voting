@@ -120,9 +120,9 @@
             document.getElementById("message").innerHTML = '';
             tag2.innerText = "Voting Result:";
 
-            for (const [key, value] of Object.entries((dataDict.summaryinfo)) {
+            for (const [key, value] of Object.entries(dataDict.summaryinfo)) {
                 let tag_temp = document.createElement("div");
-                tag_temp.innerText = `${key}` + " points, voted by: " + `${value}`;
+                tag_temp.innerText = `${key}` + " points,   voted by: " + `${value}`  ;
                 document.getElementById("message").appendChild(tag_temp);
             }
         }
