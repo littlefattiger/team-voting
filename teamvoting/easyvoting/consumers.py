@@ -48,19 +48,14 @@ class VotingConsumer(WebsocketConsumer):
         elif content_type == "voteInfo":
             USER_VOTED[user] = text_dict["voting"]
             if len(USER_VOTED) == len(CURRENT_USER):
-                summary_temp = collections.defaultdict(list)
+                summary_info = collections.defaultdict(list)
                 for k, v in USER_VOTED.items():
-                    summary_temp[v].append(k)
-
-                summary_sort = sorted(summary_temp, key=lambda k: len(summary_temp[k]), reverse=True)
-                summaryinfo = {}
-                for k in summary_sort:
-                    summaryinfo[k] = summary_temp[k]
+                    summary_info[v].append(k)
                 info = {
                     'msg_type': 5,
                     "user": user,
                     "voted": USER_VOTED,
-                    "summaryinfo": summaryinfo,
+                    "summaryinfo": summary_info,
                 }
                 async_to_sync(self.channel_layer.group_send)(group, {"type": "sync.info", 'message': info})
             else:

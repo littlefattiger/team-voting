@@ -18,7 +18,8 @@ from django.urls import path
 from easyvoting import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('index/', views.index),
+    path('', views.index),
     path('login/', views.login),
 ]

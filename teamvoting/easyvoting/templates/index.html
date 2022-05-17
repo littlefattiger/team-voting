@@ -107,12 +107,22 @@
             document.getElementById("message").innerHTML = '';
             document.getElementById("votestatus").innerHTML = '';
         } else if (dataDict.msg_type === 5) {
-            let tag = document.createElement("div");
-            document.getElementById("message").innerHTML = '';
-            tag.innerText = "Voting Result:";
-            for (const [key, value] of Object.entries(dataDict.summaryinfo)) {
+            let tag1 = document.createElement("div");
+            document.getElementById("votestatus").innerHTML = '';
+            tag1.innerText = "Voted Users:";
+            for (const [key, value] of Object.entries(dataDict.voted)) {
                 let tag_temp = document.createElement("div");
-                tag_temp.innerText = `${key}` + ":" + `${value}`;
+                tag_temp.innerText = `${key} has voted`;
+                document.getElementById("votestatus").appendChild(tag_temp);
+            }
+
+            let tag2 = document.createElement("div");
+            document.getElementById("message").innerHTML = '';
+            tag2.innerText = "Voting Result:";
+
+            for (const [key, value] of Object.entries((dataDict.summaryinfo)) {
+                let tag_temp = document.createElement("div");
+                tag_temp.innerText = `${key}` + " points, voted by: " + `${value}`;
                 document.getElementById("message").appendChild(tag_temp);
             }
         }
@@ -121,9 +131,9 @@
     }
 
     socket.onclose = function (event) {
-        {#let info = {user: "{{ user }}", type: "quitInfo"}#}
+
         print(event)
-        {#socket.send(JSON.stringify(info))#}
+
     }
 
     function vote() {
@@ -145,6 +155,11 @@
     }
 
     function closeConn() {
+        let tag = document.createElement("div");
+        document.getElementById("message").innerHTML = '';
+        tag.innerText = "You Disconnect";
+        document.getElementById("message").appendChild(tag);
+
         let info = {user: "{{ user }}", type: "quitInfo"}
         console.log("{{ user }}   is quitting")
         socket.send(JSON.stringify(info))
